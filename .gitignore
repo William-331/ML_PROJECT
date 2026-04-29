@@ -1,0 +1,8 @@
+# 忽略数据集文件
+dataset/*.csv
+
+# 忽略 VS Code 本地配置
+.vscode/
+
+# 如果运行过 python，最好把缓存文件也忽略了
+__pycache__/
