@@ -1,69 +1,75 @@
 import numpy as np
 
-class LogisticRegressionFromScratch:
-    """
-    基于纯 NumPy 实现的逻辑回归分类器。
-    
-    参数:
-    learning_rate (float): 梯度下降的学习率
-    num_iterations (int): 训练迭代次数
-    """
-    def __init__(self, learning_rate=0.01, num_iterations=1000):
+class LogisticRegression:
+    def __init__(self, learning_rate=0.01, num_iterations=1000, lambda_param=0.1):
+
+        # num_iterations: The maximum number of iterations for gradient descent
+        # lambda_param: L2 regularization coefficient
         self.learning_rate = learning_rate
         self.num_iterations = num_iterations
+        self.lambda_param = lambda_param
+        
+        # Weights and bias, initialized as None
         self.weights = None
         self.bias = None
+        
+        # Record the cost at each iteration for analysis
+        self.cost_history = []
 
     def _sigmoid(self, z):
-        """
-        Sigmoid 激活函数。
-        使用 np.clip 限制 z 的范围，防止 np.exp(-z) 计算时发生溢出 (Overflow)。
-        """
-        z = np.clip(z, -250, 250)
+        z = np.clip(z, -250, 250)   # Use np.clip to limit the range of z to prevent numerical overflow errors when calculating the sigmoid function.
         return 1 / (1 + np.exp(-z))
-
-    def fit(self, X, y):
-        """
-        拟合模型（训练阶段）。
-        
-        参数:
-        X (numpy.ndarray): 训练特征，形状为 (m_samples, n_features)
-        y (numpy.ndarray): 训练标签，形状为 (m_samples,)
-        """
-        num_samples, num_features = X.shape
-        
-        # 1. 初始化权重和偏置为 0
-        self.weights = np.zeros(num_features)
-        self.bias = 0
-
-        # 2. 梯度下降主循环
-        for _ in range(self.num_iterations):
-            # 前向传播：计算线性组合和预测概率 (Hypothesis)
-            linear_model = np.dot(X, self.weights) + self.bias
-            y_predicted = self._sigmoid(linear_model)
-
-            # 反向传播：计算梯度 (Derivatives)
-            # dw = (1/m) * X^T * (h - y)
-            dw = (1 / num_samples) * np.dot(X.T, (y_predicted - y))
-            # db = (1/m) * sum(h - y)
-            db = (1 / num_samples) * np.sum(y_predicted - y)
-
-            # 3. 更新参数
-            self.weights -= self.learning_rate * dw
-            self.bias -= self.learning_rate * db
-
-    def predict_proba(self, X):
-        """
-        返回样本属于正类 (label=1) 的概率。
-        """
+    
+    
+    def predict_prob(self, X):
+        # Calculate the linear combination of inputs and weights, then apply the sigmoid function to get probabilities.
         linear_model = np.dot(X, self.weights) + self.bias
         return self._sigmoid(linear_model)
-
+        
     def predict(self, X, threshold=0.5):
-        """
-        根据指定的阈值进行二分类预测。
-        """
-        probabilities = self.predict_proba(X)
-        # 将概率大于阈值的转换为 1，否则为 0
-        y_predicted_cls = [1 if p > threshold else 0 for p in probabilities]
-        return np.array(y_predicted_cls)
+        # Predict class labels based on predicted probabilities and a specified threshold (default is 0.5).
+        probs = self.predict_prob(X)
+        # If the probability >= 0.5, predict as 1, otherwise 0
+        return (probs >= threshold).astype(int)
+
+    
+    def fit(self, X, y):  # Train the model using Gradient Descent with L2 Regularization.
+        #X: Feature matrix of shape (m, n) -> m samples, n features
+        #y: True labels of shape (m,)
+        m, n = X.shape       ## m: Number of samples, n: Number of features
+
+        # Initialize parameters: Set weights to 0 array, bias to 0.
+        self.weights = np.zeros(n)
+        self.bias = 0
+
+        # Start Gradient Descent iterations
+        for i in range(self.num_iterations):
+
+            # A. Forward Propagation
+            # Calculate linear combination: z = X * weights + bias
+            linear_model = np.dot(X, self.weights) + self.bias
+
+            # Calculate predicted probabilities using Sigmoid
+            h = self._sigmoid(linear_model)
+
+            # B. Calculate Gradients
+            # Calculate how much each parameter contributed to the error (h - y). 
+            # The L2 term ensures no single weight dominates the model, preventing overfitting.
+            dw = (1 / m) * np.dot(X.T, (h - y)) + (self.lambda_param / m) * self.weights      # Gradient of weights (dw)
+
+            db = (1 / m) * np.sum(h - y)      # Gradient of bias (db)
+            
+            # C. Update Parameters
+            # Adjust the parameters in the opposite direction of the gradient by learning rate.
+            self.weights -= self.learning_rate * dw
+            self.bias -= self.learning_rate * db    
+
+            # D. Evaluation Metrics
+            # Compute the overall penalized Loss (Cross-Entropy + L2 Penalty) to track convergence.
+            epsilon = 1e-9  # Safety margin to prevent log(0) domain errors
+
+            cross_entropy_cost = (-1 / m) * np.sum(y * np.log(h + epsilon) + (1 - y) * np.log(1 - h + epsilon))
+            l2_penalty = (self.lambda_param / (2 * m)) * np.sum(np.square(self.weights))
+            
+            total_cost = cross_entropy_cost + l2_penalty
+            self.cost_history.append(total_cost)
