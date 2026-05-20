@@ -1,36 +1,10 @@
 import numpy as np
-import pandas as pd
 import time
-from dataset.Data_Preprocessing import custom_train_test_split, custom_standard_scaler
+from dataset.Data_Preprocessing import custom_train_test_split, custom_standard_scaler, load_tp53_data
 from models.LogesticRegression import LogisticRegression
 from models.SVM import SVM
 from utils import calculate_metrics, PCA, cross_validate
 import visualization as viz
-
-
-def load_tp53_data(filepath="dataset/METABRIC_RNA_Mutation.csv"):
-    # Load METABRIC and prepare features + TP53 mutation target.
-    # Features: RNA expression only (489 genes after filtering).
-    # Target:  tp53_mut (1 = mutated, 0 = wild-type).
-
-    df = pd.read_csv(filepath, low_memory=False)
-
-    # RNA expression columns (exclude mutation columns)
-    rna_cols = [col for col in df.columns[31:] if not col.endswith('_mut')]
-    df_rna = df[rna_cols].fillna(df[rna_cols].median())
-    X = df_rna.values
-
-    # Binarize TP53 mutation status
-    def binarize(v):
-        if pd.isna(v) or v == 0 or v == '0':
-            return 0
-        return 1
-
-    y = df['tp53_mut'].map(binarize).values
-
-    print(f"Data loaded: {X.shape[1]} RNA features, {X.shape[0]} samples")
-    print(f"TP53 mutated: {np.sum(y == 1)}, wild-type: {np.sum(y == 0)}")
-    return X, y
 
 
 def run_experiments():

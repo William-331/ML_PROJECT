@@ -3,13 +3,17 @@ import numpy as np
 
 # Random division of the dataset (80% for training, 20% for testing)
 def custom_train_test_split(X, y, test_size=0.2, random_state=42):
+
     # Set a random seed to ensure consistent results each time the program is run
     np.random.seed(random_state)
+
     # Obtain the total number of rows of the data and generate a shuffled index array
     num_samples = X.shape[0]
     shuffled_indices = np.random.permutation(num_samples)
+
     # Calculate the number of rows in the test set
     test_set_size = int(num_samples * test_size)
+
     # Divide the data based on the scrambled indices
     test_indices = shuffled_indices[:test_set_size]
     train_indices = shuffled_indices[test_set_size:]
@@ -17,7 +21,7 @@ def custom_train_test_split(X, y, test_size=0.2, random_state=42):
 
 # Feature Scaling (Z-score Scaling)
 def custom_standard_scaler(X_train, X_test):
-    # Use the mean and standard deviation of the training set to standardize the test set, to prevent data leakage.
+    # Use the mean and standard deviation of the training set to standardize the test set, prevent data leakage.
     mean = np.mean(X_train, axis=0)
     std = np.std(X_train, axis=0)
 
@@ -30,61 +34,26 @@ def custom_standard_scaler(X_train, X_test):
     return X_train_scaled, X_test_scaled
 
 
-def load_and_preprocess_data(filepath="dataset/METABRIC_RNA_Mutation.csv"):
-    df = pd.read_csv(filepath, low_memory=False)   #Tell Pandas not to read the file in chunks to save memory.
+def load_tp53_data(filepath="dataset/METABRIC_RNA_Mutation.csv"):
+    # Features: RNA expression only (489 genes after filtering).
+    # Target:  tp53_mut (1 = mutated, 0 = wild-type).
 
-    # Target variable: overall_survival (0 = deceased, 1 = alive)
-    y = df['overall_survival'].values
+    df = pd.read_csv(filepath, low_memory=False)
 
-    # 1.Extract clinical characteristics and all genetic features
-    clinical_cols = ['age_at_diagnosis', 'mutation_count', 'tumor_size', 'lymph_nodes_examined_positive']
-    # All the mutated columns end with '_mut'
-    mut_cols = [col for col in df.columns if col.endswith('_mut')]
-    # The remaining columns represent RNA expression levels
-    rna_cols = [col for col in df.columns[31:] if col not in mut_cols]
+    rna_cols = [col for col in df.columns[31:] if not col.endswith('_mut')]
+    df_rna = df[rna_cols].fillna(df[rna_cols].median())
+    X = df_rna.values
 
-    # 2.Extract Data Subset
-    df_clinical = df[clinical_cols].copy()
-    df_rna = df[rna_cols].copy()
-    df_mut = df[mut_cols].copy()
-
-    # 3.Core Logic of Data Processing
-    # Clinical and RNA Data: Fill Missing Values with Median
-    df_clinical = df_clinical.fillna(df_clinical.median())
-    df_rna = df_rna.fillna(df_rna.median())
-
-    # Mutation Data: Binary Conversion (Values equal to the string '0' or the number 0 are set to 0; all other non-zero text is converted to 1)
-    def binarize_mutation(val):
-        if pd.isna(val) or val == 0 or val == '0':
+    def binarize(v):
+        if pd.isna(v) or v == 0 or v == '0':
             return 0
-        else:
-            return 1
-    # Apply this to all mutant columns
-    df_mut = df_mut.map(binarize_mutation)
+        return 1
 
-    # 4.Concatenate them together column-wise (with axis=1)
-    X_final = pd.concat([df_clinical, df_rna, df_mut], axis=1)
+    y = df['tp53_mut'].map(binarize).values
 
-    print(f"Original data dimension: {df.shape}")
-    print(f"Input dimensions of the model after cleaning: {X_final.shape}")
-
-    # Convert a Pandas DataFrame to a pure NumPy matrix
-    X_matrix = X_final.values
-
-    # 5.Randomly split the dataset into training and testing sets, and perform feature scaling on the training and testing sets separately.
-    X_train, X_test, y_train, y_test = custom_train_test_split(X_matrix, y, test_size=0.2)
-    X_train_scaled, X_test_scaled = custom_standard_scaler(X_train, X_test)
-
-    return X_train_scaled, X_test_scaled, y_train, y_test
-
-
-
-
-
-
-
-
-
+    print(f"Data loaded: {X.shape[1]} RNA features, {X.shape[0]} samples")
+    print(f"TP53 mutated: {np.sum(y == 1)}, wild-type: {np.sum(y == 0)}")
+    return X, y
 
 
 
