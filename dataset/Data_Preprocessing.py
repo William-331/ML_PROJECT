@@ -38,7 +38,7 @@ def load_tp53_data(filepath="dataset/METABRIC_RNA_Mutation.csv"):
     # Features: RNA expression only (489 genes after filtering).
     # Target:  tp53_mut (1 = mutated, 0 = wild-type).
 
-    df = pd.read_csv(filepath, low_memory=False)
+    df = pd.read_csv(filepath, low_memory=False)    # Tell pandas to read the data all at once without chunking.
 
     rna_cols = [col for col in df.columns[31:] if not col.endswith('_mut')]
     df_rna = df[rna_cols].fillna(df[rna_cols].median())
@@ -46,8 +46,8 @@ def load_tp53_data(filepath="dataset/METABRIC_RNA_Mutation.csv"):
 
     def binarize(v):
         if pd.isna(v) or v == 0 or v == '0':
-            return 0
-        return 1
+            return 0   # Wild type
+        return 1   # Mutant type
 
     y = df['tp53_mut'].map(binarize).values
 
