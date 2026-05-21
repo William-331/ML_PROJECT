@@ -25,7 +25,7 @@ class LogisticRegression:
         return np.sign(w) * np.maximum(0, np.abs(w) - threshold)
 
     def _sigmoid(self, z):
-        z = np.clip(z, -250, 250)   # Use np.clip to limit the range of z to prevent numerical overflow errors when calculating the sigmoid function.
+        z = np.clip(z, -250, 250)   # Limit the range of z to prevent numerical overflow errors when calculating the sigmoid function.
         return 1 / (1 + np.exp(-z))
     
     
@@ -44,7 +44,7 @@ class LogisticRegression:
     def fit(self, X, y):  # Train the model using Gradient Descent with L1 or L2 Regularization.
         #X: Feature matrix of shape (m, n) -> m samples, n features
         #y: True labels of shape (m,)
-        m, n = X.shape       ## m: Number of samples, n: Number of features
+        m, n = X.shape       # m: Number of samples, n: Number of features
 
         # Initialize parameters: Set weights to 0 array, bias to 0.
         self.weights = np.zeros(n)
@@ -90,10 +90,9 @@ class LogisticRegression:
             self.cost_history.append(total_cost)
 
     def get_important_features(self, threshold=1e-5):
-        # Return indices and weights of features with non-zero weight (useful after L1 training).
-        # Returns (indices, weights) sorted by |weight| descending.
+        # Return indices and weights of features with non-zero weight, (indices, weights) sorted by |weight| descending.
         if self.weights is None:
-            raise ValueError("Model has not been trained yet. Call fit() first.")
+            raise ValueError("Model has not been trained yet. Call fit() first.")   # Prevent unauthorized invocation without prior training
         mask = np.abs(self.weights) > threshold
         indices = np.where(mask)[0]
         weights = self.weights[mask]
