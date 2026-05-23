@@ -25,7 +25,8 @@ pip install numpy pandas matplotlib
 
 ```
 ML_Project/
-├── main.py                          # 主入口：实验流程、模型评估、可视化调度
+├── main.py                          # 主入口：加载数据、调度实验、打印结果、调用可视化（仅 80 行）
+├── experiment.py                    # 实验模块：5 组模型训练、正则化路径、学习曲线、RBF 网格搜索
 ├── utils.py                         # 工具模块：KFold、交叉验证、评估指标、PCA
 ├── visualization.py                 # 可视化模块：9 张分析图表
 ├── dataset/
@@ -64,6 +65,18 @@ python main.py
 程序将依次执行 5 组对比实验、9 组正则化路径、3 条学习曲线，最终在 `plots/` 目录输出所有图表。
 
 **预计运行时间**：10–15 分钟（RBF SVM 网格搜索为 20 组 3-fold CV，耗时最久）。
+
+## 代码架构
+
+```
+main.py          → 数据加载 + 流程调度（只负责"调谁"，不负责"怎么干"）
+experiment.py    → 5 组实验训练 + 正则化路径 + 学习曲线（全部实验逻辑）
+models/*.py      → 从零实现的模型类（fit / predict）
+utils.py         → 从零实现的 KFold、PCA、交叉验证、评估指标
+visualization.py → 所有 matplotlib 图表生成
+```
+
+分工原则：**main 不知道怎么训练，experiment 不知道数据从哪来**。
 
 ## 数据预处理
 
