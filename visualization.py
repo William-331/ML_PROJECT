@@ -1,5 +1,12 @@
 import matplotlib
-matplotlib.use('Agg')
+import os
+# Use Agg backend only when running in headless mode (no display),
+# otherwise keep the default interactive backend (e.g. for Jupyter notebooks).
+if os.environ.get('MPLBACKEND') != 'inline' and 'inline' not in matplotlib.get_backend():
+    try:
+        matplotlib.use('Agg')
+    except Exception:
+        pass
 import matplotlib.pyplot as plt
 import numpy as np
 import os
