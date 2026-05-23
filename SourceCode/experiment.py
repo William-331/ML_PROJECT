@@ -1,9 +1,9 @@
 import numpy as np
 import time
-from models.LogesticRegression import LogisticRegression
-from models.SVM import SVM
-from evaluation import calculate_metrics, cross_validate
-from dataset.preprocessing import PCA
+from .LogesticRegression import LogisticRegression
+from .SVM import SVM
+from .evaluation import calculate_metrics, cross_validate
+from .preprocessing import PCA
 
 
 def run_all_experiments(X_train, X_test, y_train, y_test):
