@@ -25,26 +25,19 @@ pip install numpy pandas matplotlib
 
 ```
 ML_Project/
-├── main.py                          # 主入口：加载数据、调度实验、打印结果、调用可视化（仅 80 行）
+├── main.py                          # 主入口：加载数据、调度实验、打印结果、调用可视化（~80 行）
 ├── experiment.py                    # 实验模块：5 组模型训练、正则化路径、学习曲线、RBF 网格搜索
-├── utils.py                         # 工具模块：KFold、交叉验证、评估指标、PCA
+├── preprocessing.py                 # 特征工程：train/test 分割、Z-score 标准化、PCA 降维
+├── evaluation.py                    # 评估模块：Accuracy/Precision/Recall/F1、KFold、交叉验证
 ├── visualization.py                 # 可视化模块：9 张分析图表
 ├── dataset/
-│   ├── Data_Preprocessing.py        # 数据加载、train/test 分割、标准化
+│   ├── data_loader.py               # 数据 I/O：加载 METABRIC CSV、特征提取、标签二值化
 │   └── METABRIC_RNA_Mutation.csv    # 数据集（需自行下载放入）
 ├── models/
 │   ├── LogesticRegression.py        # 逻辑回归（L1/L2 正则化，从零实现）
 │   └── SVM.py                       # 支持向量机（Linear / RBF 核，从零实现）
 └── plots/                           # 输出图表（运行后自动生成）
-    ├── 01_metrics_comparison.png
-    ├── 02_cost_curves.png
-    ├── 03_pca_variance.png
-    ├── 04_l1_feature_weights.png
-    ├── learning_curve_LR__L1.png
-    ├── learning_curve_LR__L2.png
-    ├── learning_curve_SVM_Linear.png
-    ├── regularization_path_L1.png
-    └── regularization_path_L2.png
+    └── (9 张 PNG)
 ```
 
 ## 快速开始
@@ -69,11 +62,12 @@ python main.py
 ## 代码架构
 
 ```
-main.py          → 数据加载 + 流程调度（只负责"调谁"，不负责"怎么干"）
-experiment.py    → 5 组实验训练 + 正则化路径 + 学习曲线（全部实验逻辑）
-models/*.py      → 从零实现的模型类（fit / predict）
-utils.py         → 从零实现的 KFold、PCA、交叉验证、评估指标
-visualization.py → 所有 matplotlib 图表生成
+main.py           → 数据加载 + 流程调度（只负责"调谁"，不负责"怎么干"）
+experiment.py     → 5 组实验训练 + 正则化路径 + 学习曲线（全部实验逻辑）
+models/*.py       → 从零实现的模型类（fit / predict）
+preprocessing.py  → 特征工程工具（分割、标准化、PCA）
+evaluation.py     → 评估工具（指标、KFold、交叉验证）
+visualization.py  → 所有 matplotlib 图表生成
 ```
 
 分工原则：**main 不知道怎么训练，experiment 不知道数据从哪来**。
@@ -82,11 +76,12 @@ visualization.py → 所有 matplotlib 图表生成
 
 | 步骤 | 方法 | 实现位置 |
 |---|---|---|
-| **特征提取** | 提取第 31 列之后的 RNA 表达列，排除 `_mut` 突变列 | `load_tp53_data()` |
-| **缺失值处理** | 中位数填充（每列独立） | `df_rna.fillna(median)` |
-| **标签二值化** | `0/NaN/'0'` → 0（野生型），其他 → 1（突变型） | `binarize()` |
-| **训练/测试分割** | 80/20 随机分割，固定随机种子可复现 | `custom_train_test_split()` |
-| **特征标准化** | Z-score：`(x - μ) / σ`，测试集使用训练集的 μ 和 σ 防止泄露 | `custom_standard_scaler()` |
+| **特征提取** | 提取第 31 列之后的 RNA 表达列，排除 `_mut` 突变列 | `dataset/data_loader.py` |
+| **缺失值处理** | 中位数填充（每列独立） | `dataset/data_loader.py` |
+| **标签二值化** | `0/NaN/'0'` → 0（野生型），其他 → 1（突变型） | `dataset/data_loader.py` |
+| **训练/测试分割** | 80/20 随机分割，固定随机种子可复现 | `preprocessing.py` |
+| **特征标准化** | Z-score：`(x - μ) / σ`，测试集使用训练集的 μ 和 σ 防止泄露 | `preprocessing.py` |
+| **PCA 降维** | SVD 分解，保留 95% 方差的主成分 | `preprocessing.py` |
 
 ## 模型实现
 

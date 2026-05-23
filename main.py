@@ -1,5 +1,6 @@
 import numpy as np
-from dataset.Data_Preprocessing import custom_train_test_split, custom_standard_scaler, load_tp53_data
+from dataset.data_loader import load_tp53_data
+from preprocessing import custom_train_test_split, custom_standard_scaler
 from experiment import run_all_experiments
 import visualization as viz
 
