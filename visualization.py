@@ -1,17 +1,5 @@
 import matplotlib
-import os as _os
-
-_is_notebook = False
-try:
-    from IPython import get_ipython
-    if get_ipython() is not None and 'IPKernelApp' in get_ipython().config:
-        _is_notebook = True
-except Exception:
-    pass
-
-if not _is_notebook:
-    matplotlib.use('Agg')
-
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -20,8 +8,7 @@ import os
 def _save(fig, name):
     os.makedirs('plots', exist_ok=True)
     fig.savefig(f'plots/{name}.png', dpi=150, bbox_inches='tight')
-    if not _is_notebook:
-        plt.close(fig)
+    plt.close(fig)
 
 
 def plot_metrics_comparison(results, cv_results):
