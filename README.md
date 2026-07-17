@@ -237,9 +237,6 @@ svm_rbf = SVM(learning_rate=0.01, num_iterations=3000,
 
 在 `Data_Preprocessing.py` 中修改 `load_tp53_data` 或新增数据加载函数，确保输出格式为 `(X: ndarray, y: ndarray)`。
 
-## 贡献者
-
-本项目为 **AI3013 Machine Learning** 课程小组项目。每位成员需完成不少于 3 分钟的最终 Presentation。
 
 ## License
 
